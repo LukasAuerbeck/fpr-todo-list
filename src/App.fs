@@ -12,7 +12,8 @@ module Browser = Fable.Import.Browser
 type Item =
     { Title : string
       Description : string
-      RewardPoints : string }
+      RewardPoints : string
+      Deadline : string }
 
 type TodoItem =
     | NewTodoItem of Item
@@ -23,7 +24,8 @@ type TodoItem =
 type FormModel = 
     { Title : string
       Description : string 
-      RewardPoints : string }
+      RewardPoints : string
+      Deadline : string }
 
 type Model =
     { TodoForm : FormModel
@@ -34,6 +36,7 @@ type Msg =
 | UpdateFormTitle of string
 | UpdateFormDescription of string
 | UpdateFormRewardPoints of string
+| UpdateFormDeadline of string
 | CreateTodoItem
 | UpdateAssigneeInput of string
 | AssignTodoItem of string
@@ -45,7 +48,8 @@ let init() : Model =
     { TodoForm = 
         { Title = ""
           Description = ""
-          RewardPoints = "" }
+          RewardPoints = ""
+          Deadline = "" }
       TodoItems = [] 
       AssigneeInput = ""}
 
@@ -101,6 +105,7 @@ let markDone (title : string) (d : TodoItem) =
     | DoneTodoItem (item, assignee) -> d
     | RemovedTodoItem _ -> d
 
+
 let removeItem (title : string) (d : TodoItem) =
     match d with
     | NewTodoItem item ->
@@ -122,39 +127,40 @@ let removeItem (title : string) (d : TodoItem) =
             RemovedTodoItem (item)
         else d
     | RemovedTodoItem _ -> d
-        
 
-
-
-//let reject (title : string) (d : TodoItem) =
-//    match d with
-//    | NewTodoItem t ->
-//        if t = title then (RejectedDraft t) else d
-//    | BumpedDraft _ -> d
-//    | RejectedDraft _ -> d
 
 let update (msg:Msg) (model:Model) =
     match msg with
     | UpdateFormTitle content ->
         { model with TodoForm = { Title = content
                                   Description = model.TodoForm.Description
-                                  RewardPoints = model.TodoForm.RewardPoints} }
+                                  RewardPoints = model.TodoForm.RewardPoints
+                                  Deadline = model.TodoForm.Deadline} }
     | UpdateFormDescription content ->
         { model with TodoForm = { Title = model.TodoForm.Title
                                   Description = content
-                                  RewardPoints = model.TodoForm.RewardPoints} }
+                                  RewardPoints = model.TodoForm.RewardPoints
+                                  Deadline = model.TodoForm.Deadline} }
     | UpdateFormRewardPoints content ->
         { model with TodoForm = { Title = model.TodoForm.Title
                                   Description = model.TodoForm.Description
-                                  RewardPoints = content} }
+                                  RewardPoints = content
+                                  Deadline = model.TodoForm.Deadline} }
+    | UpdateFormDeadline content ->
+        { model with TodoForm = { Title = model.TodoForm.Title
+                                  Description = model.TodoForm.Description
+                                  RewardPoints = model.TodoForm.RewardPoints
+                                  Deadline = content } }
     | CreateTodoItem ->
         let newItem: TodoItem = NewTodoItem { Title = model.TodoForm.Title 
                                               Description = model.TodoForm.Description 
-                                              RewardPoints = model.TodoForm.RewardPoints }
+                                              RewardPoints = model.TodoForm.RewardPoints
+                                              Deadline = model.TodoForm.Deadline }
         //{ model with TodoForm = "empty" }
         { model with TodoForm = { Title = ""
                                   Description = ""
-                                  RewardPoints = "" }
+                                  RewardPoints = ""
+                                  Deadline = ""}
                      TodoItems = newItem::model.TodoItems }
     | UpdateAssigneeInput input ->
         { model with AssigneeInput = input }
@@ -198,6 +204,8 @@ let newTodoItem dispatch (item : Item) =
                   Content.content [] [ str "" ]
                   Content.content [] [ str "Reward:" ]
                   Content.content [] [ str item.RewardPoints ]
+                  Content.content [] [ str "Deadline:" ]
+                  Content.content [] [ str item.Deadline ]
                 ]
               Card.footer []
                 [
@@ -222,6 +230,8 @@ let doneTodoItem dispatch (item : Item) (assignee : string) =
                   Content.content [] [ str "" ]
                   Content.content [] [ str "Reward:" ]
                   Content.content [] [ str item.RewardPoints ]
+                  Content.content [] [ str "Deadline:" ]
+                  Content.content [] [ str item.Deadline ]
                 ]
               Card.footer []
                 [
@@ -240,10 +250,12 @@ let assignedTodoItem dispatch (item : Item) (assignee : string) =
                 [ 
                   Content.content [] [ str "Description:" ]
                   Content.content [] [ str item.Description ]
-                  Content.content [] [ sprintf "Currently assigned to %s" assignee |> str ]
+                  Content.content [] [ sprintf "Done by %s" assignee |> str  ]
                   Content.content [] [ str "" ]
                   Content.content [] [ str "Reward:" ]
                   Content.content [] [ str item.RewardPoints ]
+                  Content.content [] [ str "Deadline:" ]
+                  Content.content [] [ str item.Deadline ]
                 ]
               Card.footer []
                 [
@@ -324,13 +336,19 @@ let view (model:Model) dispatch =
                                   Input.text [ Input.Placeholder "Description"
                                                Input.Value model.TodoForm.Description
                                                Input.OnChange (fun ev -> UpdateFormDescription ev.Value |> dispatch)
-                                             ]         
+                                             ]
                                   Input.text [ Input.Placeholder "RewardPoints"
                                                Input.Value model.TodoForm.RewardPoints
                                                Input.OnChange (fun ev -> UpdateFormRewardPoints ev.Value |> dispatch)
                                                Input.Option.Props
-                                                 [ OnKeyUp (fun ev -> if ev.keyCode = 13. then dispatch CreateTodoItem) ] 
-                                             ]                          
+                                                 [ OnKeyUp (fun ev -> if ev.keyCode = 13. then dispatch CreateTodoItem) ]
+                                             ]
+                                  Input.text [ Input.Placeholder "Deadline"
+                                               Input.Value model.TodoForm.Deadline
+                                               Input.OnChange (fun ev -> UpdateFormDeadline ev.Value |> dispatch)
+                                               Input.Option.Props
+                                                 [ OnKeyUp (fun ev -> if ev.keyCode = 13. then dispatch CreateTodoItem) ]
+                                             ]
                                 ]
                               Card.footer []
                                 [ Card.Footer.a [ GenericOption.Props [ OnClick (fun _ -> dispatch CreateTodoItem) ] ]
